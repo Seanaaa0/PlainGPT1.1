@@ -1,0 +1,15 @@
+# python
+__pycache__/
+*.pyc
+
+# data artifacts
+data/*.npy
+
+# checkpoints
+pth/*.pth
+
+# env
+.venv/
+env/
+.conda/
+*.log
