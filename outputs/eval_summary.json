@@ -1,0 +1,128 @@
+{
+  "config": {
+    "checkpoint": "checkpoints/rules_4digit_carry_ss2.pth",
+    "n_samples_per_seed": 1000,
+    "seeds": [
+      0,
+      1,
+      2,
+      3,
+      7,
+      13,
+      42,
+      99
+    ]
+  },
+  "add": [
+    {
+      "seed": 0,
+      "accuracy": 0.997,
+      "correct": 997,
+      "total": 1000
+    },
+    {
+      "seed": 1,
+      "accuracy": 0.997,
+      "correct": 997,
+      "total": 1000
+    },
+    {
+      "seed": 2,
+      "accuracy": 0.998,
+      "correct": 998,
+      "total": 1000
+    },
+    {
+      "seed": 3,
+      "accuracy": 0.996,
+      "correct": 996,
+      "total": 1000
+    },
+    {
+      "seed": 7,
+      "accuracy": 0.997,
+      "correct": 997,
+      "total": 1000
+    },
+    {
+      "seed": 13,
+      "accuracy": 0.995,
+      "correct": 995,
+      "total": 1000
+    },
+    {
+      "seed": 42,
+      "accuracy": 1.0,
+      "correct": 1000,
+      "total": 1000
+    },
+    {
+      "seed": 99,
+      "accuracy": 0.996,
+      "correct": 996,
+      "total": 1000
+    }
+  ],
+  "sub": [
+    {
+      "seed": 0,
+      "accuracy": 0.995,
+      "correct": 995,
+      "total": 1000
+    },
+    {
+      "seed": 1,
+      "accuracy": 0.994,
+      "correct": 994,
+      "total": 1000
+    },
+    {
+      "seed": 2,
+      "accuracy": 0.993,
+      "correct": 993,
+      "total": 1000
+    },
+    {
+      "seed": 3,
+      "accuracy": 0.996,
+      "correct": 996,
+      "total": 1000
+    },
+    {
+      "seed": 7,
+      "accuracy": 0.99,
+      "correct": 990,
+      "total": 1000
+    },
+    {
+      "seed": 13,
+      "accuracy": 0.992,
+      "correct": 992,
+      "total": 1000
+    },
+    {
+      "seed": 42,
+      "accuracy": 0.994,
+      "correct": 994,
+      "total": 1000
+    },
+    {
+      "seed": 99,
+      "accuracy": 0.991,
+      "correct": 991,
+      "total": 1000
+    }
+  ],
+  "summary": {
+    "add": {
+      "mean": 0.997,
+      "min": 0.995,
+      "max": 1.0
+    },
+    "sub": {
+      "mean": 0.9931249999999999,
+      "min": 0.99,
+      "max": 0.996
+    }
+  }
+}

@@ -6,7 +6,7 @@ import numpy as np
 import torch
 import torch.nn.functional as F
 
-from model import DecoderOnlyLM
+from plain_gpt.model import DecoderOnlyLM
 from data_core import get_batch
 from data.gen_rules_carry import VOCAB_SIZE, SEQ_LEN
 
@@ -58,7 +58,8 @@ def eval_split(model, data_ids, cfg, device, tag="val"):
     losses = []
     with torch.no_grad():
         for _ in range(cfg["eval_batches"]):
-            x, _ = get_batch(data_ids, cfg["batch_size"], cfg["seq_len"], device)
+            x, _ = get_batch(
+                data_ids, cfg["batch_size"], cfg["seq_len"], device)
             losses.append(loss_ans_and_aux(model, x).item())
     model.train()
     mean_loss = sum(losses) / len(losses)
@@ -146,7 +147,8 @@ def main():
 
         if step % cfg["log_interval"] == 0:
             dt = time.time() - t0
-            print(f"[step {step}] loss={loss.item():.4f}  p_ss={p_ss:.3f}  ({dt:.1f}s)")
+            print(
+                f"[step {step}] loss={loss.item():.4f}  p_ss={p_ss:.3f}  ({dt:.1f}s)")
             t0 = time.time()
 
         if step % cfg["eval_interval"] == 0:
@@ -155,10 +157,12 @@ def main():
                 best_val = val_loss
                 ckpt_path = Path(cfg["ckpt_dir"]) / cfg["ckpt_name"]
                 torch.save(
-                    {"model": model.state_dict(), "config": cfg, "step": step, "best_val": best_val},
+                    {"model": model.state_dict(), "config": cfg, "step": step,
+                     "best_val": best_val},
                     ckpt_path,
                 )
-                print(f"[ckpt] saved best to {ckpt_path} (val_loss={best_val:.4f})")
+                print(
+                    f"[ckpt] saved best to {ckpt_path} (val_loss={best_val:.4f})")
 
     print("[done] training finished")
 

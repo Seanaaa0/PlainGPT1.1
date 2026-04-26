@@ -1,7 +1,7 @@
 import torch
 import numpy as np
 
-from model import DecoderOnlyLM
+from plain_gpt.model import DecoderOnlyLM
 from data.gen_rules_data import (
     VOCAB_SIZE, SEQ_LEN,
     TASK_ADD, TASK_SUB, PAD,

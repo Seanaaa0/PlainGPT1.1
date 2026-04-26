@@ -2,7 +2,7 @@ import math
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from attention import MultiHeadAttention  # 你已經有了
+from plain_gpt.attention import MultiHeadAttention  # 你已經有了
 
 # ---- 逐位置前饋 FFN ----
 

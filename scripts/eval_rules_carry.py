@@ -1,14 +1,16 @@
 import torch
 import numpy as np
+import json
 
-from model import DecoderOnlyLM
+from pathlib import Path
+from plain_gpt.model import DecoderOnlyLM
 from data.gen_rules_carry import (
     TASK_ADD, TASK_SUB, SEP,
     encode_number_4, decode_number_4,
     MAX_NUMBER,
 )
 
-CKPT_PATH = "pth/rules_4digit_carry_ss2.pth"
+CKPT_PATH = "checkpoints/rules_4digit_carry_ss2.pth"
 
 
 def load_model():
@@ -59,7 +61,6 @@ def greedy_decode_ans4(model, task_id: int, a: int, b: int):
     return ans
 
 
-
 def eval_add(model, n_samples=10000, seed=0):
     rng = np.random.default_rng(seed)
     correct = 0
@@ -107,14 +108,63 @@ if __name__ == "__main__":
     print("Model loaded!\n")
 
     N = 1000
-    seeds = [0, 1, 2, 3, 7, 13, 42, 99]
+    seeds = [67, 69, 28, 29, 136, 179, 167, 143]
 
-    print("=== ADD (0~9999, a+b<=9999) ===")
+    results = {
+        "config": {
+            "checkpoint": CKPT_PATH,
+            "n_samples_per_seed": N,
+            "seeds": seeds
+        },
+        "add": [],
+        "sub": []
+    }
+
+    print("=== ADD ===")
     for s in seeds:
         acc, c, n = eval_add(model, n_samples=N, seed=s)
         print(f"[ADD][seed={s:>3}] accuracy = {acc*100:6.2f}% ({c}/{n})")
 
-    print("\n=== SUB (0~9999, a>=b) ===")
+        results["add"].append({
+            "seed": s,
+            "accuracy": acc,
+            "correct": int(c),
+            "total": int(n)
+        })
+
+    print("\n=== SUB ===")
     for s in seeds:
         acc, c, n = eval_sub(model, n_samples=N, seed=s)
         print(f"[SUB][seed={s:>3}] accuracy = {acc*100:6.2f}% ({c}/{n})")
+
+        results["sub"].append({
+            "seed": s,
+            "accuracy": acc,
+            "correct": int(c),
+            "total": int(n)
+        })
+
+    # 🔥 aggregate summary（超重要）
+    def summarize(lst):
+        accs = [x["accuracy"] for x in lst]
+        return {
+            "mean": float(np.mean(accs)),
+            "min": float(np.min(accs)),
+            "max": float(np.max(accs))
+        }
+
+    results["summary"] = {
+        "add": summarize(results["add"]),
+        "sub": summarize(results["sub"])
+    }
+
+    # 🔥 輸出
+    output_dir = Path("outputs")
+    output_dir.mkdir(exist_ok=True)
+
+    output_path = output_dir / "eval_summary_1.json"
+
+    with open(output_path, "w") as f:
+        json.dump(results, f, indent=2)
+
+    print(f"\nSaved results to: {output_path}")

@@ -1,6 +1,6 @@
 import torch
 
-from model import DecoderOnlyLM
+from plain_gpt.model import DecoderOnlyLM
 from data.gen_rules_carry import (
     TASK_ADD, TASK_SUB, SEP,
     encode_number_4, decode_number_4,
@@ -37,7 +37,8 @@ def greedy_decode_ans4(model, task_id: int, a: int, b: int) -> int:
     """
     # 先用 DIGIT_0 當 placeholder（token=10），避免出現非 digit token 影響 context
     DIGIT0 = 10
-    x = [task_id] + encode_number_4(a) + encode_number_4(b) + [SEP] + [DIGIT0]*4 + [SEP] + [DIGIT0]*4 + [SEP]
+    x = [task_id] + encode_number_4(a) + encode_number_4(b) + \
+        [SEP] + [DIGIT0]*4 + [SEP] + [DIGIT0]*4 + [SEP]
     x = torch.tensor(x, dtype=torch.long).unsqueeze(0)  # (1,20)
 
     # 逐位生成 ans digits

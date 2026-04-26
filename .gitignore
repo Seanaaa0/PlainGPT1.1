@@ -3,13 +3,12 @@ __pycache__/
 *.pyc
 
 # data artifacts
-data/*.npy
+data/generated/*.npy
 
-# checkpoints
-pth/*.pth
+checkpoints/*.pth
 
 # env
 .venv/
-env/
+
 .conda/
 *.log

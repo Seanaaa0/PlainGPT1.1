@@ -1,165 +1,144 @@
 # PlainGPT 1.1
 
-A from-scratch implementation of a decoder-only GPT-style Transformer, built to study **how algorithmic reasoning emerges under constrained settings**, with a concrete focus on **multi-digit arithmetic and exposure bias correction**.
+A from-scratch implementation of a decoder-only GPT-style Transformer, designed to study how structured reasoning emerges in small models under autoregressive decoding.
 
-This project does **not** rely on HuggingFace, Axolotl, or pretrained checkpoints. All components—including attention, training loop, and scheduled sampling—are implemented directly in PyTorch for maximal transparency and experimental control.
+Unlike typical LLM projects, this work focuses on a controlled setting:
+multi-digit arithmetic with explicit handling of exposure bias.
+
+No HuggingFace, no pretrained weights — all components are implemented directly in PyTorch.
 
 ---
 
-##  Key Results
+## Key Results
 
-**4-digit arithmetic (0–9999), greedy decoding**
+4-digit arithmetic (0–9999), greedy decoding:
 
 | Task                      | Accuracy       |
-| ------------------------- | -------------- |
-| Addition (with carry)     | **99.5–100%**  |
-| Subtraction (with borrow) | **99.3–99.6%** |
+|---------------------------|---------------|
+| Addition (carry)          | 99.5–100%     |
+| Subtraction (borrow)      | 99.3–99.6%    |
 
-* Evaluation uses **pure greedy autoregressive decoding**
-* No teacher forcing during evaluation
-* Stable across multiple random seeds
+- Evaluated with pure autoregressive greedy decoding
+- No teacher forcing during evaluation
+- Stable across multiple random seeds
 
-These results indicate that the model learns **generalizable arithmetic rules**, rather than memorizing lookup tables.
+Example aggregated results:
 
----
+{
+  "add": { "mean": 0.997, "min": 0.995, "max": 1.0 },
+  "sub": { "mean": 0.993, "min": 0.990, "max": 0.996 }
+}
 
-##  Why This Works
-
-### The Core Problem: Exposure Bias
-
-Multi-digit arithmetic is fundamentally a **sequence generation** problem:
-
-* During training (teacher forcing), the model always sees correct previous digits
-* During inference, the model must condition on *its own predictions*
-
-A naïve setup leads to:
-
-* Very low training/validation loss
-* Poor greedy decoding accuracy (~85–90%)
-
-This gap is caused by **exposure bias**—a mismatch between training and inference distributions.
+Full evaluation outputs are saved to:
+outputs/eval_summary.json
 
 ---
 
-### The Key Fix: Autoregressive Scheduled Sampling (SS2)
+## Problem: Exposure Bias
 
-PlainGPT 1.1 implements a **true autoregressive scheduled sampling strategy**:
+Arithmetic is a sequence prediction task.
 
-* During training, with probability `p_ss`:
+During training:
+- model sees correct digits (teacher forcing)
 
-  * The model generates answer digits **step-by-step**
-  * Each predicted digit is written back into the input sequence
-  * Loss is computed under the *same conditions as greedy inference*
+During inference:
+- model conditions on its own predictions
 
-This directly aligns the training distribution with the inference distribution, effectively correcting exposure bias.
-
-Additionally, the dataset includes **carry / borrow auxiliary supervision**, allowing the model to learn structured digit interactions instead of relying on surface statistics.
+This mismatch causes:
+- low training loss
+- but degraded greedy decoding accuracy (~85–90%)
 
 ---
 
-##  Repository Structure
+## Solution: Autoregressive Scheduled Sampling (SS2)
 
-```
+PlainGPT 1.1 implements a true autoregressive training loop:
+
+- With probability p_ss:
+  - model generates answer digits step-by-step
+  - writes predictions back into input
+  - computes loss under real inference conditions
+
+This aligns training with inference and improves stability.
+
+---
+
+## Observations
+
+- Addition performs slightly better than subtraction
+- Performance drops in long carry / borrow chains
+- Indicates model learns structured rules but struggles with deep digit dependencies
+
+---
+
+## Project Structure
+
 PlainGPT/
-├── attention.py          # Multi-head self-attention (from scratch)
-├── model.py              # Decoder-only Transformer
-├── lora.py               # Optional LoRA utilities
-├── data_core.py          # Batch loading utilities
+├── plain_gpt/
+│   ├── attention.py
+│   ├── model.py
+│   ├── lora.py
+│   └── data_core.py
 │
 ├── data/
-│   ├── gen_rules_data.py         # Baseline arithmetic (small range)
-│   └── gen_rules_carry.py        # 4-digit arithmetic with carry/borrow
+│   ├── gen_rules_data.py
+│   └── gen_rules_carry.py
 │
-├── train_rules.py        # Training (autoregressive scheduled sampling)
-├── eval_rules.py         # Evaluation (baseline)
-├── eval_rules_carry.py   # Evaluation (4-digit carry/borrow)
-├── test_rules.py         # Manual sanity tests
+├── scripts/
+│   ├── train_rules.py
+│   ├── eval_rules.py
+│   ├── eval_rules_carry.py
+│   └── test_rules.py
 │
-├── pth/                  # Checkpoints (ignored by git)
+├── outputs/
+├── checkpoints/
 └── README.md
-```
 
 ---
 
-##  Setup
+## Setup
 
-```bash
-pip install torch numpy
-```
-
-Python ≥ 3.9 is recommended.
+pip install -r requirements.txt
 
 ---
 
-##  Data Generation
+## Data Generation
 
-Generate training data for 4-digit arithmetic with carry / borrow:
-
-```bash
 python data/gen_rules_carry.py
-```
-
-This produces tokenized `.npy` datasets used by `train_rules.py`.
 
 ---
 
-##  Training
+## Training
 
-Train the model using **autoregressive scheduled sampling (SS2)**:
-
-```bash
-python train_rules.py
-```
-
-Key characteristics:
-
-* Decoder-only Transformer
-* Autoregressive rollout during training
-* Gradual scheduled sampling ramp-up
-* No pretrained weights
-
-Training typically converges to >99% greedy accuracy within ~30k steps on a single GPU.
+python scripts/train_rules.py --config configs/rules_4digit_ss2.json
 
 ---
 
-## 📊 Evaluation
+## Evaluation
 
-Evaluate greedy decoding accuracy:
-
-```bash
-python eval_rules_carry.py
-```
-
-This script:
-
-* Samples random arithmetic problems
-* Uses **pure greedy decoding**
-* Reports accuracy across multiple random seeds
+python -m scripts.eval_rules_carry
 
 ---
 
-##  Reproducibility Notes
+## Reproducibility
 
-* No pretrained models are used
-* All arithmetic behavior emerges from data and architecture
-* Checkpoints are not committed by default
-* Results can be reproduced by rerunning data generation and training
-
----
-
-##  Project Motivation
-
-PlainGPT 1.1 was built to explore:
-
-* How symbolic reasoning emerges in small Transformers
-* Why low loss does not guarantee correct autoregressive behavior
-* How exposure bias affects algorithmic tasks
-* How training-time rollout can dramatically improve inference stability
-
-The project prioritizes **clarity, correctness, and experimental insight** over scale.
+- No pretrained models used
+- All data is synthetic and regenerable
+- Results reproducible via scripts
 
 ---
 
-##  License
+## Motivation
 
-MIT License
+This project explores:
+
+- how reasoning emerges in small Transformers
+- why low loss does not guarantee correct inference
+- how exposure bias affects sequence models
+- how training-time rollout improves inference stability
+
+---
+
+## License
+
+MIT
