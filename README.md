@@ -72,7 +72,7 @@ This aligns training with inference and improves stability.
 ---
 
 ## Project Structure
-
+```text
 PlainGPT/
 ├── plain_gpt/
 │   ├── attention.py
@@ -93,7 +93,7 @@ PlainGPT/
 ├── outputs/
 ├── checkpoints/
 └── README.md
-
+```
 ---
 
 ## Setup
